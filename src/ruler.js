@@ -35,6 +35,11 @@ export default class Ruler {
                 lineWidth: 1,
                 enableMouseTracking: true,
                 enableToolTip: true
+                ,
+                /* Unit settings for ruler display: 'px', 'mm', or 'cm' */
+                unit: 'mm',
+                /* CSS pixels per inch used for conversions; default 96 */
+                dpi: 96
             };
 
         const rotateRuler = (curRuler, angle) => {
@@ -134,6 +139,11 @@ export default class Ruler {
             positionRuler(rulerz[alignment], alignment);
             attachListeners(container, rulerz[alignment]);
         };
+
+        /* Helpers for unit conversions */
+        const pxPerMm = () => options.dpi / 25.4;
+        const pxToMm = px => (px / pxPerMm());
+        // formatUnit helper available per-guide inside guideLine as 'formatUnitLocal'
 
         const constructCorner = (() => {
             const cornerDraw = (container, side) => {
@@ -397,14 +407,26 @@ export default class Ruler {
                 draw = false;
                 label = '';
 
-                if (delta % 50 === 0) {
+                // Compute value in px at current scale
+                const pxValue = Math.round(Math.abs(delta) * rulScale);
+                // Unit numeric label without suffix (for canvas)
+                let unitLabelNum;
+                if (options.unit === 'px') {
+                    unitLabelNum = pxValue;
+                } else if (options.unit === 'cm') {
+                    unitLabelNum = Math.round(pxToMm(pxValue) / 10);
+                } else {
+                    unitLabelNum = Math.round(pxToMm(pxValue));
+                }
+
+                if (options.unit === 'px' ? (delta % 50 === 0) : (Math.round(pxToMm(pxValue)) % 10 === 0)) {
                     pointLength = lineLengthMax;
-                    label = Math.round(Math.abs(delta) * rulScale);
+                    label = unitLabelNum;
                     draw = true;
-                } else if (delta % 25 === 0) {
+                } else if (options.unit === 'px' ? (delta % 25 === 0) : (Math.round(pxToMm(pxValue)) % 5 === 0)) {
                     pointLength = lineLengthMed;
                     draw = true;
-                } else if (delta % 5 === 0) {
+                } else if (options.unit === 'px' ? (delta % 5 === 0) : (Math.round(pxToMm(pxValue)) % 1 === 0)) {
                     pointLength = lineLengthMin;
                     draw = true;
                 }
@@ -577,10 +599,18 @@ export default class Ruler {
         };
 
         const updateToolTip = (x, y) => {
+            const formatUnitLocal = px => {
+                if (options.unit === 'px') return px + 'px';
+                const pxPerMmLocal = options.dpi / 25.4;
+                if (options.unit === 'cm') return `${(px / pxPerMmLocal / 10).toFixed(1).replace(/\.0$/, '')}cm`;
+                return `${Math.round(px / pxPerMmLocal)}mm`;
+            };
             if (y) {
-                guideLine.dataset.tip = Math.round((y - options.rulerHeight - 1 - _curPosDelta) * _curScale) + 'px';
+                const pxValue = Math.round((y - options.rulerHeight - 1 - _curPosDelta) * _curScale);
+                guideLine.dataset.tip = formatUnitLocal(pxValue);
             } else {
-                guideLine.dataset.tip = Math.round((x - options.rulerHeight - 1 - _curPosDelta) * _curScale) + 'px';
+                const pxValue = Math.round((x - options.rulerHeight - 1 - _curPosDelta) * _curScale);
+                guideLine.dataset.tip = formatUnitLocal(pxValue);
             }
         };
 

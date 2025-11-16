@@ -7,7 +7,10 @@ export default (editor, opts = {}) => {
             dragMode: 'translate',
             rulerHeight: 15,
             canvasZoom: 94,
-            rulerOpts: {},
+            rulerOpts: {
+                unit: 'mm',
+                dpi: 96
+            },
         },
         ...opts
     };
@@ -17,6 +20,10 @@ export default (editor, opts = {}) => {
     const defaultDragMode = editor.getConfig('dragMode');
     let zoom = options.canvasZoom
     let scale = 100 / zoom;
+    // Save original setZoom to restore later
+    let _origSetZoom = null;
+    let _zoomHandler = null;
+    let _zoomChangeHandler = null;
     let rulers;
 
     cm.add('ruler-visibility', {
@@ -38,11 +45,64 @@ export default (editor, opts = {}) => {
             editor.setDragMode(options.dragMode);
             setOffset();
             rulers.api.setScale(scale);
+
+            // Override Canvas.setZoom so rulers update automatically
+            if (!_origSetZoom && editor.Canvas && typeof editor.Canvas.setZoom === 'function') {
+                _origSetZoom = editor.Canvas.setZoom.bind(editor.Canvas);
+                editor.Canvas.setZoom = function (newZoom) {
+                    // call original
+                    const out = _origSetZoom(newZoom);
+                    try {
+                        zoom = newZoom || editor.Canvas.getZoom();
+                        scale = 100 / zoom;
+                        // update offsets and rulers
+                        setOffset();
+                        rulers && rulers.api.setScale(scale);
+                    } catch (err) {
+                        // ignore - should not crash editor on error
+                        console.warn('grapesjs-rulers: failed to update rulers on zoom', err);
+                    }
+                    return out;
+                }
+            }
+
+            // Also listen to canvas zoom events if present
+            _zoomHandler = () => {
+                try {
+                    zoom = editor.Canvas.getZoom();
+                    scale = 100 / zoom;
+                    setOffset();
+                    rulers && rulers.api.setScale(scale);
+                } catch (err) {}
+            };
+            editor.on('canvas:zoom', _zoomHandler);
+            _zoomChangeHandler = () => {
+                try {
+                    zoom = editor.Canvas.getZoom();
+                    scale = 100 / zoom;
+                    setOffset();
+                    rulers && rulers.api.setScale(scale);
+                } catch (err) {}
+            };
+            editor.on('change:canvasZoom', _zoomChangeHandler);
         },
         stop(editor) {
             rulers && rulers.api.toggleRulerVisibility(false);
             editor.Canvas.setZoom(100);
             editor.setDragMode(defaultDragMode);
+            // restore original Canvas.setZoom if we replaced it
+            if (_origSetZoom && editor.Canvas) {
+                editor.Canvas.setZoom = _origSetZoom;
+                _origSetZoom = null;
+            }
+            if (_zoomHandler) {
+                editor.off('canvas:zoom', _zoomHandler);
+                _zoomHandler = null;
+            }
+            if (_zoomChangeHandler) {
+                editor.off('change:canvasZoom', _zoomChangeHandler);
+                _zoomChangeHandler = null;
+            }
         }
     });
 

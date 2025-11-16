@@ -48,6 +48,8 @@ body, html {
     * `get-guides` - get array of guides
     * `set-guides` - set guides from array e.g. `editor.runCommand('set-guides', {guides: [...]})`
     * `set-zoom` - sets zoom and updates rulers e.g. `editor.runCommand('set-zoom', {zoom: 90})`
+      * When you change the zoom through `editor.Canvas.setZoom(zoom)` or the GrapesJS UI, the rulers will update automatically.
+    * Note: rulers will also update automatically when the canvas zoom is changed via `editor.Canvas.setZoom(zoom)` or GrapesJS UI.
     * `destroy-ruler`
 
 
@@ -59,7 +61,24 @@ body, html {
 | `rulerHeight` | Ruler thickness | `15` |
 | `canvasZoom` | Zoom out the canvas | `94` |
 | `rulerOpts` | Options for ruler object | `{}` |
+| `rulerOpts.unit` | Unit to display on the ruler. Options: `'px'`, `'mm'`, `'cm'` | `'mm'` |
+| `rulerOpts.dpi` | DPI (CSS px per inch) used to convert px to physical units (defaults to 96) | `96` |
 
+
+### Ruler units example
+Set the ruler to show centimeters (cm) and adjust DPI (default 96):
+
+```js
+plugins: [plugin],
+pluginsOpts: {
+  [plugin]: {
+    rulerOpts: {
+      unit: 'cm',
+      dpi: 96
+    }
+  }
+}
+```
 
 
 ## Download
