@@ -99,7 +99,7 @@ Directly in the browser
 <link href="https://unpkg.com/grapesjs/dist/css/grapes.min.css" rel="stylesheet"/>
 <link href="https://unpkg.com/grapesjs-rulers/dist/grapesjs-rulers.min.css" rel="stylesheet">
 <script src="https://unpkg.com/grapesjs"></script>
-<script src="path/to/grapesjs-rulers.min.js"></script>
+<script src="path/to/dist/index.js"></script>
 
 <div id="gjs"></div>
 
@@ -173,10 +173,16 @@ Install dependencies
 $ npm i
 ```
 
-Build css
+Build css (using Dart Sass)
 
 ```sh
 $ npm run build:css
+```
+
+Note: The project uses `sass` (Dart Sass) instead of `node-sass` for better compatibility and maintenance. If you previously relied on `node-sass`, install dependencies again with `npm i` to fetch the new `sass` dependency.
+
+Note: `grapesjs-cli` v3+ switched the build output filename to `dist/index.js` (instead of `dist/<pkg-name>.min.js`). If you upgrade `grapesjs-cli` to v3 or v4, update `package.json` `main` to `dist/index.js` (already updated in this repo) and change your script reference to `dist/index.js`.
+Also note that `grapesjs-cli` v4 requires Node >= 14.15.0.
 ```
 
 Start the dev server
