@@ -409,24 +409,27 @@ export default class Ruler {
 
                 // Compute value in px at current scale
                 const pxValue = Math.round(Math.abs(delta) * rulScale);
+                // local helper to avoid ReferenceError if pxToMm is not in enclosing scope
+                const pxPerMmLocal = () => options.dpi / 25.4;
+                const pxToMmLocal = px => (px / pxPerMmLocal());
                 // Unit numeric label without suffix (for canvas)
                 let unitLabelNum;
                 if (options.unit === 'px') {
                     unitLabelNum = pxValue;
                 } else if (options.unit === 'cm') {
-                    unitLabelNum = Math.round(pxToMm(pxValue) / 10);
+                    unitLabelNum = Math.round(pxToMmLocal(pxValue) / 10);
                 } else {
-                    unitLabelNum = Math.round(pxToMm(pxValue));
+                    unitLabelNum = Math.round(pxToMmLocal(pxValue));
                 }
 
-                if (options.unit === 'px' ? (delta % 50 === 0) : (Math.round(pxToMm(pxValue)) % 10 === 0)) {
+                if (options.unit === 'px' ? (delta % 50 === 0) : (Math.round(pxToMmLocal(pxValue)) % 10 === 0)) {
                     pointLength = lineLengthMax;
                     label = unitLabelNum;
                     draw = true;
-                } else if (options.unit === 'px' ? (delta % 25 === 0) : (Math.round(pxToMm(pxValue)) % 5 === 0)) {
+                } else if (options.unit === 'px' ? (delta % 25 === 0) : (Math.round(pxToMmLocal(pxValue)) % 5 === 0)) {
                     pointLength = lineLengthMed;
                     draw = true;
-                } else if (options.unit === 'px' ? (delta % 5 === 0) : (Math.round(pxToMm(pxValue)) % 1 === 0)) {
+                } else if (options.unit === 'px' ? (delta % 5 === 0) : (Math.round(pxToMmLocal(pxValue)) % 1 === 0)) {
                     pointLength = lineLengthMin;
                     draw = true;
                 }
