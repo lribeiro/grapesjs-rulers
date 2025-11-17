@@ -2,6 +2,8 @@
  * Adapted from https://github.com/MrFrankel/ruler
  */
 
+import { drawPoints as drawPointsUtil } from './drawPoints.js';
+
 export default class Ruler {
     constructor(options = {}) {
         this.api = this.builder();
@@ -382,7 +384,8 @@ export default class Ruler {
 
         const drawRuler = (_rulerLength, _rulerThickness, _rulerScale) => {
             rulLength = canvas.width = _rulerLength * 4;
-            rulThickness = canvas.height = _rulerThickness;
+            rulThickness = _rulerThickness;
+            canvas.height = rulThickness * 2;
             rulScale = _rulerScale || rulScale;
             context.strokeStyle = options.strokeStyle;
             context.fillStyle = options.fillStyle;
@@ -394,51 +397,7 @@ export default class Ruler {
         };
 
         const drawPoints = () => {
-            let pointLength = 0,
-                label = '',
-                delta = 0,
-                draw = false,
-                lineLengthMax = 0,
-                lineLengthMed = rulThickness / 2,
-                lineLengthMin = rulThickness / 2;
-
-            for (let pos = 0; pos <= rulLength; pos += 1) {
-                delta = ((rulLength / 2) - pos);
-                draw = false;
-                label = '';
-
-                // Compute value in px at current scale
-                const pxValue = Math.round(Math.abs(delta) * rulScale);
-                // local helper to avoid ReferenceError if pxToMm is not in enclosing scope
-                const pxPerMmLocal = () => options.dpi / 25.4;
-                const pxToMmLocal = px => (px / pxPerMmLocal());
-                // Unit numeric label without suffix (for canvas)
-                let unitLabelNum;
-                if (options.unit === 'px') {
-                    unitLabelNum = pxValue;
-                } else if (options.unit === 'cm') {
-                    unitLabelNum = Math.round(pxToMmLocal(pxValue) / 10);
-                } else {
-                    unitLabelNum = Math.round(pxToMmLocal(pxValue));
-                }
-
-                if (options.unit === 'px' ? (delta % 50 === 0) : (Math.round(pxToMmLocal(pxValue)) % 10 === 0)) {
-                    pointLength = lineLengthMax;
-                    label = unitLabelNum;
-                    draw = true;
-                } else if (options.unit === 'px' ? (delta % 25 === 0) : (Math.round(pxToMmLocal(pxValue)) % 5 === 0)) {
-                    pointLength = lineLengthMed;
-                    draw = true;
-                } else if (options.unit === 'px' ? (delta % 5 === 0) : (Math.round(pxToMmLocal(pxValue)) % 1 === 0)) {
-                    pointLength = lineLengthMin;
-                    draw = true;
-                }
-                if (draw) {
-                    context.moveTo(pos + 0.5, rulThickness + 0.5);
-                    context.lineTo(pos + 0.5, pointLength + 0.5);
-                    context.fillText(label, pos + 1.5, (rulThickness / 2) + 1);
-                }
-            }
+            drawPointsUtil(context, rulLength, rulThickness, rulScale, options);
         };
 
         const mousemove = (e) => {
@@ -588,7 +547,8 @@ export default class Ruler {
                     options.container.style.cursor = null;
                     guideLine.style.cursor = null;
                     document.onmousemove = function () { };
-                    hideToolTip();
+                    // Keep tooltip visible after setting the guideline
+                    // hideToolTip();
                     this.utils.removeClasss(guideLine, ['rul_line_dragged']);
                 }
             }
@@ -658,7 +618,18 @@ export default class Ruler {
         guideLine.addEventListener('mouseup', mouseup);
 
         guideLine.addEventListener('dblclick', dblclick);
-        if (event) draggable.startMoving(event);
+        if (event) {
+            draggable.startMoving(event);
+        }
+        
+        // Always show tooltip for set guidelines
+        // Use setTimeout to ensure the guideline is fully positioned
+        setTimeout(() => {
+            showToolTip();
+            const x = parseInt(guideLine.style.left || 0);
+            const y = parseInt(guideLine.style.top || 0);
+            updateToolTip(x, y);
+        }, 0);
 
         self = {
             setAsDraggable: draggable,

@@ -6,6 +6,7 @@
   <title>Grapesjs Rulers</title>
   <link href="https://unpkg.com/grapesjs/dist/css/grapes.min.css" rel="stylesheet">
   <link rel="stylesheet" href="./dist/grapesjs-rulers.min.css">
+  <script src="./dist/index.js"></script>
   <script src="https://unpkg.com/grapesjs"></script>
   <style>
     body,
@@ -22,19 +23,9 @@
     <div class="panel">
       <h1 class="welcome">Welcome to</h1>
       <div class="big-title">
-        <svg class="logo" viewBox="0 0 100 100">
-          <path
-            d="M40 5l-12.9 7.4 -12.9 7.4c-1.4 0.8-2.7 2.3-3.7 3.9 -0.9 1.6-1.5 3.5-1.5 5.1v14.9 14.9c0 1.7 0.6 3.5 1.5 5.1 0.9 1.6 2.2 3.1 3.7 3.9l12.9 7.4 12.9 7.4c1.4 0.8 3.3 1.2 5.2 1.2 1.9 0 3.8-0.4 5.2-1.2l12.9-7.4 12.9-7.4c1.4-0.8 2.7-2.2 3.7-3.9 0.9-1.6 1.5-3.5 1.5-5.1v-14.9 -12.7c0-4.6-3.8-6-6.8-4.2l-28 16.2" />
-        </svg>
-        <span>GrapesJS</span>
+        CENAS
       </div>
-      <div class="description">
-        This is a demo content from index.html. For the development, you shouldn't edit this file, instead you
-        can
-        copy and rename it to _index.html, on next server start the new file will be served, and it will be
-        ignored by
-        git.
-      </div>
+
     </div>
     <style>
       .panel {
@@ -86,6 +77,25 @@
 
 
   <script type="text/javascript">
+    // Provide a safe `plugin` variable for the browser demo
+    // The package exposes a UMD global: `window['grapesjs-rulers']`.
+    // When bundled by webpack rollups it might keep the export in `.default`.
+    const plugin = (window['grapesjs-rulers'] && (window['grapesjs-rulers'].default || window['grapesjs-rulers'])) || null;
+    if (!plugin) {
+      console.error('grapesjs-rulers not loaded. The rulers plugin will not work.');
+    }
+    // Provide an optional init wrapper that calls the plugin only when available
+    const pluginInit = plugin ? (editor => plugin(editor, {
+        rulerOpts: {
+          unit: 'cm', // show centimeters
+          dpi: 96,
+          fillStyle: '#2ecc71', // green font for demo
+          fontSize: '7px', // smaller font for demo
+          fontWeight: '700',
+          labelStroke: 'rgba(0,0,0,0.85)',
+        }
+    })) : undefined;
+
     window.editor = grapesjs.init({
       height: '100%',
       container: '#gjs',
@@ -93,7 +103,11 @@
       fromElement: true,
       noticeOnUnload: false,
       storageManager: false,
-      plugins: ['grapesjs-rulers'],
+      plugins: [
+        "grapesjs-rulers",
+        // Ensure the `plugin` variable is defined; call it through pluginInit
+        pluginInit
+      ],
       pluginsOpts: {
         'grapesjs-rulers': {
           /* Test here your options  */

@@ -22,10 +22,8 @@
     display: block;
     position: absolute;
     border: 1px solid rgba(206, 219, 236, .5);
-    background-color: rgba(0, 0, 0, 0.2);
+    background-color: #f5f5f5;
     pointer-events: all;
-    filter: blur(0);
-    -webkit-filter: blur(0);
     z-index: 1000;
 
 }
